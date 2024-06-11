@@ -18,9 +18,22 @@ int Unit::GetHp() const {
     return hp;
 }
 
+int Unit::GetTargetX() const {
+    return targetX;
+}
+
+int Unit::GetTargetY() const {
+    return targetY;
+}
+
 void Unit::SetTarget(int targetX, int targetY) {
     this->targetX = targetX;
     this->targetY = targetY;
+}
+
+void Unit::SetPosition(int x, int y) {
+    this->x = x;
+    this->y = y;
 }
 
 void Unit::TakeDamage(int damage) {

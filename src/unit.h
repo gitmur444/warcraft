@@ -11,7 +11,10 @@ public:
     int GetX() const;
     int GetY() const;
     int GetHp() const;
+    int GetTargetX() const;  // ????? ?????
+    int GetTargetY() const;  // ????? ?????
     void SetTarget(int targetX, int targetY);
+    void SetPosition(int x, int y);  // ????? ?????
     void TakeDamage(int damage);
     virtual bool Act(Map& map, int current_tick) = 0;
 
