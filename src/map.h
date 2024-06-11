@@ -1,18 +1,20 @@
 #pragma once
+
 #include <vector>
+
+class Unit;  
 
 class Map {
 public:
-    Map() = default;  // ???????? ??????????? ?? ?????????
     Map(int width, int height);
-    bool isCellEmpty(int x, int y) const;
-    void setCell(int x, int y, int unitId);
-    void clearCell(int x, int y);
-    int getWidth() const;
-    int getHeight() const;
+    bool IsCellOccupied(int x, int y) const;
+    void SetCellOccupied(int x, int y, bool occupied);
+    Unit* GetUnitAt(int x, int y);
+    void AddUnit(Unit* unit); 
 
 private:
-    int width_;
-    int height_;
-    std::vector<std::vector<int>> cells_;
+    int width;
+    int height;
+    std::vector<std::vector<bool>> cells;
+    std::vector<Unit*> unit_map;
 };

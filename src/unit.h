@@ -1,23 +1,23 @@
 #pragma once
-#include <string>
+
+class Map;  // ??????????????? ?????????? ?????? Map
 
 class Unit {
 public:
-    Unit(int id, int x, int y, int hp, int strength);
+    Unit(int id, int x, int y, int hp);
     virtual ~Unit() = default;
-    int getId() const;
-    int getX() const;
-    int getY() const;
-    int getHp() const;
-    int getStrength() const;
-    void setPosition(int x, int y);
-    void takeDamage(int damage);
-    virtual std::string getType() const = 0;
+
+    int GetId() const;
+    int GetX() const;
+    int GetY() const;
+    int GetHp() const;
+    void SetTarget(int targetX, int targetY);
+    void TakeDamage(int damage);
+    virtual bool Act(Map& map, int current_tick) = 0;
 
 protected:
-    int id_;
-    int x_;
-    int y_;
-    int hp_;
-    int strength_;
+    int id;
+    int x, y;
+    int targetX, targetY;
+    int hp;
 };

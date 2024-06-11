@@ -1,32 +1,28 @@
 #include "unit.h"
 
-Unit::Unit(int id, int x, int y, int hp, int strength) : id_(id), x_(x), y_(y), hp_(hp), strength_(strength) {}
+Unit::Unit(int id, int x, int y, int hp) : id(id), x(x), y(y), targetX(x), targetY(y), hp(hp) {}
 
-int Unit::getId() const {
-    return id_;
+int Unit::GetId() const {
+    return id;
 }
 
-int Unit::getX() const {
-    return x_;
+int Unit::GetX() const {
+    return x;
 }
 
-int Unit::getY() const {
-    return y_;
+int Unit::GetY() const {
+    return y;
 }
 
-int Unit::getHp() const {
-    return hp_;
+int Unit::GetHp() const {
+    return hp;
 }
 
-int Unit::getStrength() const {
-    return strength_;
+void Unit::SetTarget(int targetX, int targetY) {
+    this->targetX = targetX;
+    this->targetY = targetY;
 }
 
-void Unit::setPosition(int x, int y) {
-    x_ = x;
-    y_ = y;
-}
-
-void Unit::takeDamage(int damage) {
-    hp_ -= damage;
+void Unit::TakeDamage(int damage) {
+    hp -= damage;
 }

@@ -1,23 +1,28 @@
 #include "map.h"
+#include "unit.h"
 
-Map::Map(int width, int height) : width_(width), height_(height), cells_(height, std::vector<int>(width, -1)) {}
+Map::Map(int width, int height) : width(width), height(height), cells(width, std::vector<bool>(height, false)) {}
 
-bool Map::isCellEmpty(int x, int y) const {
-    return cells_[y][x] == -1;
+bool Map::IsCellOccupied(int x, int y) const {
+    if (x < 0 || x >= width || y < 0 || y >= height) return true;
+    return cells[x][y];
 }
 
-void Map::setCell(int x, int y, int unitId) {
-    cells_[y][x] = unitId;
+void Map::SetCellOccupied(int x, int y, bool occupied) {
+    if (x >= 0 && x < width && y >= 0 && y < height) {
+        cells[x][y] = occupied;
+    }
 }
 
-void Map::clearCell(int x, int y) {
-    cells_[y][x] = -1;
+Unit* Map::GetUnitAt(int x, int y) {
+    for (auto& unit : unit_map) {
+        if (unit->GetX() == x && unit->GetY() == y) {
+            return unit;
+        }
+    }
+    return nullptr;
 }
 
-int Map::getWidth() const {
-    return width_;
-}
-
-int Map::getHeight() const {
-    return height_;
+void Map::AddUnit(Unit* unit) {
+    unit_map.push_back(unit);
 }

@@ -1,59 +1,85 @@
 #include "game.h"
 #include "warrior.h"
 #include "archer.h"
+#include "map.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
-Game::Game() : tick_(0) {}
+Game::Game() : current_tick(0) {}
 
-void Game::createMap(int width, int height) {
-    map_ = Map(width, height);
-    events_.emplace_back("[" + std::to_string(tick_) + "] MAP_CREATED width=" + std::to_string(width) + " height=" + std::to_string(height));
-}
-
-void Game::spawnWarrior(int id, int x, int y, int hp, int strength) {
-    auto warrior = std::make_shared<Warrior>(id, x, y, hp, strength);
-    units_[id] = warrior;
-    map_.setCell(x, y, id);
-    events_.emplace_back("[" + std::to_string(tick_) + "] UNIT_SPAWNED unitId=" + std::to_string(id) + " unitType=Warrior x=" + std::to_string(x) + " y=" + std::to_string(y));
-}
-
-void Game::spawnArcher(int id, int x, int y, int hp, int strength, int range, int agility) {
-    auto archer = std::make_shared<Archer>(id, x, y, hp, strength, range, agility);
-    units_[id] = archer;
-    map_.setCell(x, y, id);
-    events_.emplace_back("[" + std::to_string(tick_) + "] UNIT_SPAWNED unitId=" + std::to_string(id) + " unitType=Archer x=" + std::to_string(x) + " y=" + std::to_string(y));
-}
-
-void Game::march(int unitId, int targetX, int targetY) {
-    auto unit = units_[unitId];
-    // Add logic to move the unit towards targetX, targetY
-    events_.emplace_back("[" + std::to_string(tick_) + "] MARCH_STARTED unitId=" + std::to_string(unitId) + " x=" + std::to_string(unit->getX()) + " y=" + std::to_string(unit->getY()) + " targetX=" + std::to_string(targetX) + " targetY=" + std::to_string(targetY));
-}
-
-void Game::wait(int ticks) {
-    for (int i = 0; i < ticks; ++i) {
-        processTick();
+void Game::LoadScenario(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening scenario file: " << filename << std::endl;
+        exit(1);
+    }
+    
+    std::string line;
+    while (std::getline(file, line)) {
+        ProcessCommand(line);
     }
 }
 
-void Game::run() {
+void Game::Run() {
+    // Simulation loop
     while (true) {
-        processTick();
-        // Add logic to determine when to stop the simulation
+        bool any_action = false;
+        for (auto& unit : units) {
+            if (unit->Act(*map, current_tick)) {
+                any_action = true;
+            }
+        }
+        if (!any_action) {
+            break;
+        }
+        current_tick++;
     }
 }
 
-void Game::processTick() {
-    tick_++;
-    // Process each unit's action
-    for (auto& [id, unit] : units_) {
-        if (unit->getHp() > 0) {
-            // Add logic for unit actions
+void Game::ProcessCommand(const std::string& command) {
+    std::istringstream ss(command);
+    std::string cmd;
+    ss >> cmd;
+    
+    if (cmd == "CREATE_MAP") {
+        int width, height;
+        ss >> width >> height;
+        map = std::make_unique<Map>(width, height);
+        PrintEvent("MAP_CREATED width=" + std::to_string(width) + " height=" + std::to_string(height));
+    } else if (cmd == "SPAWN_WARRIOR") {
+        int id, x, y, hp, strength;
+        ss >> id >> x >> y >> hp >> strength;
+        auto warrior = std::make_unique<Warrior>(id, x, y, hp, strength);
+        map->SetCellOccupied(x, y, true);
+        map->AddUnit(warrior.get());  
+        units.push_back(std::move(warrior));
+        PrintEvent("UNIT_SPAWNED unitId=" + std::to_string(id) + " unitType=Warrior x=" + std::to_string(x) + " y=" + std::to_string(y));
+    } else if (cmd == "SPAWN_ARCHER") {
+        int id, x, y, hp, strength, range, agility;
+        ss >> id >> x >> y >> hp >> strength >> range >> agility;
+        auto archer = std::make_unique<Archer>(id, x, y, hp, strength, range, agility);
+        map->SetCellOccupied(x, y, true);
+        map->AddUnit(archer.get());  
+        units.push_back(std::move(archer));
+        PrintEvent("UNIT_SPAWNED unitId=" + std::to_string(id) + " unitType=Archer x=" + std::to_string(x) + " y=" + std::to_string(y));
+    } else if (cmd == "MARCH") {
+        int id, targetX, targetY;
+        ss >> id >> targetX >> targetY;
+        for (auto& unit : units) {
+            if (unit->GetId() == id) {
+                unit->SetTarget(targetX, targetY);
+                PrintEvent("MARCH_STARTED unitId=" + std::to_string(id) + " x=" + std::to_string(unit->GetX()) + " y=" + std::to_string(unit->GetY()) + " targetX=" + std::to_string(targetX) + " targetY=" + std::to_string(targetY));
+                break;
+            }
         }
+    } else if (cmd == "WAIT") {
+        int ticks;
+        ss >> ticks;
+        current_tick += ticks;
     }
-    // Output events
-    for (const auto& event : events_) {
-        std::cout << event << std::endl;
-    }
-    events_.clear();
+}
+
+void Game::PrintEvent(const std::string& event) {
+    std::cout << "[" << current_tick << "] " << event << std::endl;
 }

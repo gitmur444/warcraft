@@ -1,14 +1,15 @@
 #pragma once
+
 #include "unit.h"
+#include "map.h"
 
 class Archer : public Unit {
 public:
     Archer(int id, int x, int y, int hp, int strength, int range, int agility);
-    std::string getType() const override;
-    int getRange() const;
-    int getAgility() const;
+    bool Act(Map& map, int current_tick) override;
 
 private:
-    int range_;
-    int agility_;
+    int strength;
+    int range;
+    int agility;
 };
