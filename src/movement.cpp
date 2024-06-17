@@ -1,4 +1,6 @@
 #include "movement.h"
+#include "Events/unit_moved_event.h"
+#include "Events/event_handler.h"
 #include <iostream>
 
 bool Movement::Move(Unit& unit, Map& map, int current_tick) {
@@ -14,7 +16,8 @@ bool Movement::Move(Unit& unit, Map& map, int current_tick) {
             map.SetCellOccupied(x, y, false);
             unit.SetPosition(newX, newY);
             map.SetCellOccupied(newX, newY, true);
-            std::cout << "[" << current_tick << "] UNIT_MOVED unitId=" << unit.GetId() << " x=" << newX << " y=" << newY << std::endl;
+            EventHandler eventHandler;
+            eventHandler.HandleEvent(std::make_shared<UnitMovedEvent>(unit.GetId(), newX, newY));
             return true;
         }
     }

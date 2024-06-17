@@ -2,11 +2,19 @@
 #include "warrior.h"
 #include "archer.h"
 #include "map.h"
+#include "Commands/command_parser.h"
+#include "Commands/command.h"
+#include "Events/map_created_event.h"
+#include "Events/unit_spawned_event.h"
+#include "Events/march_started_event.h"
+#include "Events/unit_attacked_event.h"
+#include "Events/unit_died_event.h"
+#include "Events/unit_moved_event.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
-Game::Game() : current_tick(0) {}
+Game::Game() : current_tick(0), commandParser(std::make_unique<CommandParser>()) {}
 
 void Game::LoadScenario(const std::string& filename) {
     std::ifstream file(filename);
@@ -17,7 +25,7 @@ void Game::LoadScenario(const std::string& filename) {
     
     std::string line;
     while (std::getline(file, line)) {
-        ProcessCommand(line);
+        ExecuteCommand(line);
     }
 }
 
@@ -37,49 +45,45 @@ void Game::Run() {
     }
 }
 
-void Game::ProcessCommand(const std::string& command) {
-    std::istringstream ss(command);
-    std::string cmd;
-    ss >> cmd;
-    
-    if (cmd == "CREATE_MAP") {
-        int width, height;
-        ss >> width >> height;
-        map = std::make_unique<Map>(width, height);
-        PrintEvent("MAP_CREATED width=" + std::to_string(width) + " height=" + std::to_string(height));
-    } else if (cmd == "SPAWN_WARRIOR") {
-        int id, x, y, hp, strength;
-        ss >> id >> x >> y >> hp >> strength;
-        auto warrior = std::make_unique<Warrior>(id, x, y, hp, strength);
-        map->SetCellOccupied(x, y, true);
-        map->AddUnit(warrior.get());  
-        units.push_back(std::move(warrior));
-        PrintEvent("UNIT_SPAWNED unitId=" + std::to_string(id) + " unitType=Warrior x=" + std::to_string(x) + " y=" + std::to_string(y));
-    } else if (cmd == "SPAWN_ARCHER") {
-        int id, x, y, hp, strength, range, agility;
-        ss >> id >> x >> y >> hp >> strength >> range >> agility;
-        auto archer = std::make_unique<Archer>(id, x, y, hp, strength, range, agility);
-        map->SetCellOccupied(x, y, true);
-        map->AddUnit(archer.get());  
-        units.push_back(std::move(archer));
-        PrintEvent("UNIT_SPAWNED unitId=" + std::to_string(id) + " unitType=Archer x=" + std::to_string(x) + " y=" + std::to_string(y));
-    } else if (cmd == "MARCH") {
-        int id, targetX, targetY;
-        ss >> id >> targetX >> targetY;
-        for (auto& unit : units) {
-            if (unit->GetId() == id) {
-                unit->SetTarget(targetX, targetY);
-                PrintEvent("MARCH_STARTED unitId=" + std::to_string(id) + " x=" + std::to_string(unit->GetX()) + " y=" + std::to_string(unit->GetY()) + " targetX=" + std::to_string(targetX) + " targetY=" + std::to_string(targetY));
-                break;
-            }
-        }
-    } else if (cmd == "WAIT") {
-        int ticks;
-        ss >> ticks;
-        current_tick += ticks;
+void Game::ExecuteCommand(const std::string& command) {
+    auto parsedCommand = commandParser->Parse(command);
+    if (parsedCommand) {
+        ExecuteCommand(std::move(parsedCommand));
     }
 }
 
-void Game::PrintEvent(const std::string& event) {
-    std::cout << "[" << current_tick << "] " << event << std::endl;
+void Game::ExecuteCommand(std::unique_ptr<Command> command) {
+    command->Execute(*this);
+}
+
+void Game::CreateMap(int width, int height) {
+    map = std::make_unique<Map>(width, height);
+    eventHandler.HandleEvent(std::make_shared<MapCreatedEvent>(width, height));
+}
+
+void Game::SpawnUnit(const std::string& unitType, int id, int x, int y, int hp, int strength, int range, int agility) {
+    std::unique_ptr<Unit> unit;
+    if (unitType == "Warrior") {
+        unit = std::make_unique<Warrior>(id, x, y, hp, strength);
+    } else if (unitType == "Archer") {
+        unit = std::make_unique<Archer>(id, x, y, hp, strength, range, agility);
+    }
+    map->SetCellOccupied(x, y, true);
+    map->AddUnit(unit.get());
+    units.push_back(std::move(unit));
+    eventHandler.HandleEvent(std::make_shared<UnitSpawnedEvent>(id, unitType, x, y));
+}
+
+void Game::March(int id, int targetX, int targetY) {
+    for (auto& unit : units) {
+        if (unit->GetId() == id) {
+            unit->SetTarget(targetX, targetY);
+            eventHandler.HandleEvent(std::make_shared<MarchStartedEvent>(id, unit->GetX(), unit->GetY(), targetX, targetY));
+            break;
+        }
+    }
+}
+
+void Game::Wait(int ticks) {
+    current_tick += ticks;
 }
