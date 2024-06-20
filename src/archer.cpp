@@ -8,14 +8,14 @@
 Archer::Archer(int id, int x, int y, int hp, int strength, int range, int agility)
     : Unit(id, x, y, hp), strength(strength), range(range), agility(agility) {}
 
-bool Archer::Act(Map& map, int current_tick) {
+bool Archer::Act(Map& map, std::vector<std::unique_ptr<Unit>>& units, int current_tick) {
     // Range attack logic
-    if (RangeAttack::Attack(*this, range, agility, map, current_tick)) {
+    if (RangeAttack::Attack(*this, range, agility, map, units, current_tick)) {
         return true;
     }
 
     // Melee attack logic
-    if (MeleeAttack::Attack(*this, strength, map, current_tick)) {
+    if (MeleeAttack::Attack(*this, strength, map, units, current_tick)) {
         return true;
     }
 

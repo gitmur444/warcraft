@@ -28,39 +28,6 @@ int main(int argc, char** argv)
 		throw std::runtime_error("Error: No file specified in command line argument");
 	}
 
-	std::ifstream file(argv[1]);
-	if (!file) {
-		throw std::runtime_error("Error: File not found - " + std::string(argv[1]));
-	}
-
-	std::cout << "Commands:\n";
-	io::CommandParser parser;
-	parser.add<io::CreateMap>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::SpawnWarrior>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::SpawnArcher>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::March>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::Wait>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		});
-
-	parser.parse(file);
-	
-
-
 	Game game;
   game.LoadScenario(argv[1]);
   game.Run();

@@ -21,15 +21,3 @@ Unit* Attack::FindTarget(Unit& unit, int range, Map& map) {
     }
     return target;
 }
-
-void Attack::PerformAttack(Unit& attacker, Unit* target, int damage, Map& map, int current_tick) {
-    if (target) {
-        target->TakeDamage(damage);
-        std::cout << "[" << current_tick << "] UNIT_ATTACKED attackerUnitId=" << attacker.GetId() << " targetUnitId=" << target->GetId() 
-                  << " damage=" << damage << " targetHp=" << target->GetHp() << std::endl;
-        if (target->GetHp() <= 0) {
-            std::cout << "[" << current_tick << "] UNIT_DIED unitId=" << target->GetId() << std::endl;
-            map.SetCellOccupied(target->GetX(), target->GetY(), false);
-        }
-    }
-}

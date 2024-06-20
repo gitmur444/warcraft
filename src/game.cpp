@@ -30,12 +30,17 @@ void Game::LoadScenario(const std::string& filename) {
 }
 
 void Game::Run() {
-    // Simulation loop
     while (true) {
         bool any_action = false;
-        for (auto& unit : units) {
-            if (unit->Act(*map, current_tick)) {
+        for (auto it = units.begin(); it != units.end(); ) {
+            if ((*it)->Act(*map, units, current_tick)) {
                 any_action = true;
+            }
+            // Check if the unit is dead and remove it if necessary
+            if ((*it)->GetHp() <= 0) {
+                it = units.erase(it);
+            } else {
+                ++it;
             }
         }
         if (!any_action) {
